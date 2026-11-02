@@ -1,0 +1,13 @@
+.venv/
+.env
+*.db
+*.db-*
+__pycache__/
+*.pyc
+logs/
+tests/pc-store-tests-*/
+
+backups/
+inspect-*.mjs
+verify-assembly.mjs
+static/model-loading.fragment

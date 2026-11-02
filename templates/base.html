@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf }}"><title>{% block title %}NEON / PC — сборки под ваши задачи{% endblock %}</title>
+<link rel="stylesheet" href="/static/style.css"><script src="/static/app.js" defer></script></head>
+<body class="{% block bodyclass %}{% endblock %}">
+<header class="nav"><a class="brand" href="/">NEON<span> / </span>PC<small>COMPUTERS. PERSONAL.</small></a>
+<nav><a href="/#builds">Готовые ПК</a><a href="/configurator">Конфигуратор</a><a href="/#contacts">Контакты</a></nav>
+<a class="nav-cta" href="/configurator">Собрать ПК ↗</a></header>
+{% block content %}{% endblock %}
+<footer><a class="brand" href="/">NEON / PC</a><span>Демонстрационный магазин · 2026</span><a href="/admin">Вход для администратора</a></footer>
+<dialog id="checkout"><form id="order-form"><button type="button" class="close" aria-label="Закрыть">×</button>
+<p class="eyebrow">ПОЧТИ ГОТОВО</p><h2>Обсудим вашу сборку</h2><p>Оставьте контакты — менеджер уточнит детали и наличие. Онлайн-оплата не требуется.</p>
+<label>Ваше имя<input name="customer_name" minlength="2" maxlength="100" autocomplete="name" required></label>
+<label>Телефон<input name="phone" type="tel" minlength="10" maxlength="25" autocomplete="tel" placeholder="+7 (999) 000-00-00" required></label>
+<p class="muted">Демо-форма: для тестирования используйте вымышленные данные.</p><p id="order-message" role="status"></p><button class="button" type="submit">Отправить заявку ↗</button>
+</form></dialog></body></html>

@@ -1,0 +1,9 @@
+<div class="build-grid">
+{% for b in builds %}
+<article class="build-card">
+  <a class="build-art" href="/configurator" aria-label="Открыть конфигуратор">{% if b.image_url %}<img src="{{ b.image_url }}" alt="{{ b.name }}" loading="lazy">{% else %}<div class="pc-mini" aria-hidden="true"><i></i><i></i><span>NEON</span></div>{% endif %}</a>
+  <div class="build-info"><span class="eyebrow">Готовая конфигурация</span><h3>{{ b.name }}</h3><p>{{ b.description }}</p><div class="build-price"><strong>{{ b.price|rub }}</strong><button class="button compact" data-build="{{ b.id }}">Оставить заявку</button></div></div>
+</article>
+{% else %}<div class="empty-state"><h3>Готовим новые сборки</h3><p>А пока можно собрать собственную конфигурацию.</p><a class="button" href="/configurator">Собрать ПК</a></div>{% endfor %}
+<article class="custom-build"><span class="eyebrow">Без лишних компромиссов</span><h3>Или собери<br>что-то своё.</h3><p>Выбери компоненты под свои задачи и посмотри, как они сочетаются.</p><a class="button secondary" href="/configurator">Открыть конфигуратор ↗</a></article>
+</div>
