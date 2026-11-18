@@ -2,9 +2,10 @@ import json
 import os
 import re
 import time
+from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 from urllib.parse import urlparse
-from fastapi import FastAPI, Request, Depends, HTTPException
+from fastapi import BackgroundTasks, FastAPI, Request, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -14,6 +15,8 @@ from .database import ROOT, SessionLocal
 from .models import User, Category, Component, ReadyBuild, Order
 from .security import passwords, csrf_token, check_csrf
 from .catalog import selected_components, snapshot, total
+from .site import SITE
+from .notify import notify_order, telegram_configured
 
 secret = os.getenv("SECRET_KEY", "")
 if len(secret) < 32:
@@ -38,7 +41,8 @@ def admin(request: Request, db=Depends(database)):
     return user
 
 def render(request, name, **context):
-    return templates.TemplateResponse(request=request, name=name, context={"csrf": csrf_token(request), **context})
+    return templates.TemplateResponse(request=request, name=name,
+        context={"csrf": csrf_token(request), "site": SITE, **context})
 
 @app.middleware("http")
 async def headers(request, call_next):
@@ -63,6 +67,14 @@ def builds_page(request: Request, db=Depends(database)):
 def configurator(request: Request):
     return render(request, "configurator.html")
 
+@app.get("/privacy")
+def privacy(request: Request):
+    return render(request, "privacy.html")
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return RedirectResponse("/static/favicon.svg", 308)
+
 @app.get("/api/catalog")
 def catalog(db=Depends(database)):
     model_names = {'Процессор': 'cpu', 'Материнская плата': 'motherboard', 'ОЗУ': 'ram', 'Видеокарта': 'gpu', 'Накопитель': 'storage'}
@@ -77,7 +89,7 @@ def catalog(db=Depends(database)):
                 "image_url": c.image_url, "model_url": model_url(c)} for c in db.scalars(select(Component))]}
 
 @app.post("/api/orders", status_code=201)
-async def create_order(request: Request, db=Depends(database)):
+async def create_order(request: Request, background_tasks: BackgroundTasks, db=Depends(database)):
     check_csrf(request, request.headers.get("X-CSRF-Token"))
     try:
         data = await request.json()
@@ -88,6 +100,8 @@ async def create_order(request: Request, db=Depends(database)):
     name, phone = str(data.get("customer_name", "")).strip(), str(data.get("phone", "")).strip()
     if not 2 <= len(name) <= 100 or not re.fullmatch(r"[+\d ()-]{10,25}", phone) or not 10 <= len(re.sub(r"\D", "", phone)) <= 15:
         raise HTTPException(400, "Укажите имя и корректный телефон (10–15 цифр).")
+    if data.get("consent") not in (True, "on", "true", "1", 1):
+        raise HTTPException(400, "Без согласия на обработку персональных данных заявку принять нельзя.")
     kind = data.get("type")
     if kind == "ready":
         build_id = data.get("build_id")
@@ -114,12 +128,16 @@ async def create_order(request: Request, db=Depends(database)):
         if result.rowcount != 1:
             db.rollback()
             raise HTTPException(409, "Товар закончился. Обновите каталог.")
-    details = {"components": snapshot(items)}
+    details = {"components": snapshot(items), "consent": {
+        "policy": "/privacy", "accepted": True,
+        "at": datetime.now(timezone.utc).isoformat(timespec="seconds")}}
     if kind == "ready":
         details["build_name"] = build.name
     order = Order(customer_name=name, phone=phone, type=kind, details_json=details, total_price=amount)
     db.add(order)
     db.commit()
+    background_tasks.add_task(notify_order, order.id, name, phone, kind,
+        str(order.total_price), details["components"], details.get("build_name"))
     return {"id": order.id, "message": "Спасибо, мы свяжемся с вами", "total_price": str(order.total_price)}
 
 @app.get("/admin/login")
@@ -155,7 +173,8 @@ async def logout(request: Request, user=Depends(admin)):
 def dashboard(request: Request, user=Depends(admin), db=Depends(database)):
     return render(request, "admin.html", components=db.scalars(select(Component)).all(),
         categories=db.scalars(select(Category)).all(), builds=db.scalars(select(ReadyBuild)).all(),
-        orders=db.scalars(select(Order).order_by(Order.created_at.desc())).all())
+        orders=db.scalars(select(Order).order_by(Order.created_at.desc())).all(),
+        telegram=telegram_configured())
 
 def model_for(kind):
     if kind not in ("components", "builds"):

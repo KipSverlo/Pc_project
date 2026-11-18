@@ -4,6 +4,14 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf }}">
   <title>{% block title %}NEON / PC — собери свой компьютер{% endblock %}</title>
+  <meta name="description" content="{% block description %}Собери компьютер в 3D-конфигураторе: проверка совместимости, честные цены и сборка под твои задачи.{% endblock %}">
+  <meta name="theme-color" content="#0d0d12">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ site.name }}">
+  <meta property="og:title" content="{% block ogtitle %}NEON / PC — собери свой компьютер{% endblock %}">
+  <meta property="og:description" content="{% block ogdescription %}3D-конфигуратор с проверкой сокета и памяти. Собираем, тестируем и доставляем ПК под твои задачи.{% endblock %}">
+  <meta property="og:locale" content="ru_RU">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -11,18 +19,26 @@
   {% block scripts %}<script type="module" src="/static/public.js"></script>{% endblock %}
 </head>
 <body class="{% block bodyclass %}public-site{% endblock %}">
-<header class="site-header"><a class="logo" href="/" aria-label="NEON PC, главная"><span class="logo-mark">N</span>NEON<span class="logo-slash">/</span>PC</a>
-  <nav aria-label="Основная навигация"><a href="/configurator">Конфигуратор</a><a href="/builds">Готовые сборки</a><a href="/#contacts">Контакты</a></nav>
+<header class="site-header"><a class="logo" href="/" aria-label="{{ site.name }}, главная"><span class="logo-mark">N</span>NEON<span class="logo-slash">/</span>PC</a>
+  <nav aria-label="Основная навигация"><a href="/configurator">Конфигуратор</a><a href="/builds">Готовые сборки</a><a href="/#delivery">Доставка</a><a href="/#contacts">Контакты</a></nav>
   <a class="button compact" href="/configurator">Собрать ПК <span aria-hidden="true">↗</span></a>
 </header>
 {% block content %}{% endblock %}
-{% block footer %}<footer class="site-footer"><a class="logo" href="/">NEON / PC</a><span>Твоя сборка. Твой следующий уровень.</span><a href="/static/model-credits.html">Авторы 3D-моделей</a><a href="/admin">Для команды</a></footer>{% endblock %}
+{% block footer %}<footer class="site-footer">
+  <a class="logo" href="/">NEON / PC</a>
+  <span>Твоя сборка. Твой следующий уровень.</span>
+  <a href="/privacy">Политика конфиденциальности</a>
+  <a href="/static/model-credits.html">Авторы 3D-моделей</a>
+  <a href="/admin">Для команды</a>
+  {% if site.has_requisites %}<span class="footer-legal">{{ site.legal_name }}{% if site.inn %} · ИНН {{ site.inn }}{% endif %}{% if site.ogrn %} · ОГРН {{ site.ogrn }}{% endif %}</span>{% endif %}
+</footer>{% endblock %}
 <dialog id="checkout" aria-labelledby="checkout-title"><form id="order-form">
   <button type="button" id="close-checkout" class="icon-button close" aria-label="Закрыть">×</button>
   <span class="eyebrow">Последний шаг</span><h2 id="checkout-title">Обсудим твою сборку</h2>
   <p>Оставь контакты. Уточним наличие, комплектацию и условия заказа.</p>
   <label>Имя<input name="customer_name" minlength="2" maxlength="100" autocomplete="name" required></label>
   <label>Телефон<input name="phone" type="tel" minlength="10" maxlength="25" autocomplete="tel" placeholder="+7 (999) 000-00-00" required></label>
+  <label class="consent"><input type="checkbox" name="consent" required> <span>Согласен с <a href="/privacy" target="_blank" rel="noopener">политикой конфиденциальности</a> и обработкой персональных данных</span></label>
   <p id="order-message" role="status"></p><button type="submit" class="button full">Отправить заявку</button>
 </form></dialog>
 </body></html>

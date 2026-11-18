@@ -8,6 +8,8 @@ export class PCScene{
  constructor(container,{onStatus=()=>{},onSocket=()=>{},hero=false}={}){
  this.container=container;this.onStatus=onStatus;this.onSocket=onSocket;this.hero=hero;this.parts=new Map();this.revision=0;this.expanded=false;this.caseVisible=true;this.slotsVisible=true;this.highlight=null;this.ramSocket='dimmA2';
  this.scene=new THREE.Scene();this.scene.background=new THREE.Color('#0d0d12');this.assembly=new THREE.Group();this.assembly.name='pcAssembly';this.scene.add(this.assembly);
+// Пустой корпус-витрина: сцена не выглядит чёрным прямоугольником до выбора деталей.
+this.showcase=proceduralPart('case');this.showcase.name='showcase';this.scene.add(this.showcase);
  this.camera=new THREE.PerspectiveCamera(37,1,.1,80);this.camera.position.set(5,2.8,8);this.renderer=new THREE.WebGLRenderer({antialias:true});this.renderer.setPixelRatio(Math.min(devicePixelRatio,2));this.renderer.outputColorSpace=THREE.SRGBColorSpace;this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1;container.append(this.renderer.domElement);
  this.controls=new OrbitControls(this.camera,this.renderer.domElement);this.controls.target.set(0,0,.7);this.controls.minDistance=4;this.controls.maxDistance=15;this.controls.enablePan=false;this.controls.addEventListener('change',()=>this.render());
  this.scene.add(new THREE.AmbientLight(0xe6ddf3,.9));for(const [color,intensity,pos] of [[0xffffff,2,[3,5,6]],[0xd284ed,1,[-4,1,1]]]){const light=new THREE.DirectionalLight(color,intensity);light.position.set(...pos);this.scene.add(light);}
@@ -51,7 +53,9 @@ export class PCScene{
  else{obj.position.set(type==='cpu'?-1:type==='ram'?1:0,type==='gpu'?-.8:.6,1);}
  obj.traverse(n=>{if(n.userData.partId!==obj.userData.id)return;for(const m of n.material?(Array.isArray(n.material)?n.material:[n.material]):[]){if(!m.emissive)continue;if(!m.userData.originalEmissive)m.userData.originalEmissive={color:m.emissive.clone(),intensity:m.emissiveIntensity};if(this.badIds.has(obj.userData.id)){m.emissive.set('#ff264d');m.emissiveIntensity=.7;}else{m.emissive.copy(m.userData.originalEmissive.color);m.emissiveIntensity=m.userData.originalEmissive.intensity;}}});
  }
- if(board){board.add(this.markers);this.markers.visible=this.slotsVisible&&!this.hero;}else this.markers.removeFromParent();this.render();
+ if(board){board.add(this.markers);this.markers.visible=this.slotsVisible&&!this.hero;}else this.markers.removeFromParent();
+// Витринный корпус уступает место выбранному корпусу из каталога.
+this.showcase.visible=!this.parts.has('case');this.render();
  }
  reset(){this.camera.position.set(5,2.8,8);this.controls.target.set(0,0,.7);this.controls.update();this.render();}
 }

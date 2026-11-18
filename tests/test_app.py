@@ -36,7 +36,7 @@ class StoreTests(unittest.TestCase):
     def order(self, ids, **extra):
         return self.client.post("/api/orders", headers=self.headers, json={
             "type": "config", "component_ids": ids, "customer_name": "Тестовый клиент",
-            "phone": "+7 (000) 000-00-00", **extra})
+            "phone": "+7 (000) 000-00-00", "consent": True, **extra})
 
     def login(self):
         response = self.client.post("/admin/login", data={"csrf": self.csrf,
@@ -45,7 +45,8 @@ class StoreTests(unittest.TestCase):
         self.csrf = re.search(r'name="csrf-token" content="([^"]+)"', response.text).group(1)
 
     def test_pages_and_access(self):
-        for path in ("/", "/configurator", "/admin/login", "/api/catalog", "/static/style.css", "/static/app.js"):
+        for path in ("/", "/builds", "/configurator", "/privacy", "/favicon.ico",
+                     "/admin/login", "/api/catalog", "/static/style.css", "/static/app.js"):
             self.assertEqual(self.client.get(path).status_code, 200, path)
         self.assertEqual(self.client.get("/admin", follow_redirects=False).status_code, 303)
         self.assertEqual(self.client.post("/api/orders", json={}).status_code, 403)
@@ -111,6 +112,18 @@ class StoreTests(unittest.TestCase):
         ready.update(id=build_id, name="Обновлено")
         self.assertEqual(self.client.post("/admin/builds/save", data=ready).status_code, 200)
         self.assertEqual(self.client.post(f"/admin/builds/delete/{build_id}", data={"csrf": self.csrf}).status_code, 200)
+
+    def test_consent_and_public_texts(self):
+        without = self.order([1], consent=False)
+        self.assertEqual(without.status_code, 400)
+        self.assertIn("согласия", without.json()["detail"])
+        privacy = self.client.get("/privacy")
+        self.assertIn("Политика конфиденциальности", privacy.text)
+        self.assertIn("152-ФЗ", privacy.text)
+        home = self.client.get("/")
+        self.assertIn("Доставка, оплата и гарантия", home.text)
+        self.assertIn("политикой конфиденциальности", home.text)
+        self.assertNotIn("undefined", home.text)
 
     def test_seed_repeat_and_input(self):
         seed()
