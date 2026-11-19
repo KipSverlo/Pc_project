@@ -19,7 +19,6 @@ NEON / PC E-commerce MVP с 3D-конфигуратором сборок
 
 📸 Скриншоты
 <img width="2804" height="1514" alt="image" src="https://github.com/user-attachments/assets/08b6c3bb-d262-4622-b2eb-85c2c09460ab" />
-<img width="2759" height="1496" alt="image" src="https://github.com/user-attachments/assets/38b6e189-9e46-41f6-b44c-ea9350e2a4bf" />
 <img width="2759" height="1496" alt="image" src="https://github.com/user-attachments/assets/d5cd8fea-8a1e-4877-af77-be62322d267a" />
 <img width="2723" height="1448" alt="image" src="https://github.com/user-attachments/assets/11ecf23a-cd0b-49a0-967d-b6e3f2ee00a6" />
 
